@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pdf
+raw_text.txt
+*.py
+untangled_text.txt
+cleaned_questions.json
+questions_data.json

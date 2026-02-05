@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBBS Progress Tracker | Premium Study Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="user-profile">
+                <div class="avatar" id="userAvatar">A</div>
+                <div>
+                    <h1 id="userNameDisplay">Welcome, User</h1>
+                    <p class="stat-label">4th MBBS Exam Prep</p>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="subject-btn active" id="resetProgress">Reset All</button>
+            </div>
+        </header>
+
+        <section class="dashboard-stats">
+            <div class="stat-card">
+                <span class="stat-label">Subject Mastery (Weighted)</span>
+                <span class="stat-value" id="overallCompletion">0%</span>
+                <div class="q-freq" id="subjectProgress">Score: 0 / 0</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Essay Completion</span>
+                <span class="stat-value" id="essayCompletion">0%</span>
+                <p class="stat-label" style="font-size: 0.7rem;">(Weighted 5x)</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Short Note Completion</span>
+                <span class="stat-value" id="snCompletion">0%</span>
+                <p class="stat-label" style="font-size: 0.7rem;">(Normal weight)</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Progress Ratio</span>
+                <span class="stat-value" id="activeSubjectName" style="font-size: 1.5rem;">Medicine</span>
+                <p class="stat-label" id="totalQProgress">0 / 0 Questions</p>
+            </div>
+        </section>
+
+        <section class="charts-grid">
+            <div class="chart-container">
+                <h3 style="margin-bottom: 1rem;">Subject Performance</h3>
+                <canvas id="distributionChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3 style="margin-bottom: 1rem;">Daily Progress</h3>
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </section>
+
+        <nav class="subject-nav" id="subjectNav">
+            <!-- Subjects will be injected here -->
+        </nav>
+
+        <main id="questionExplorer">
+            <!-- Questions will be injected here -->
+            <div style="text-align: center; padding: 5rem; color: var(--text-dim);">
+                <h2>Select a subject to begin exploring questions</h2>
+                <p>Track your 4th MBBS preparation based on repetition frequency</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
