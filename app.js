@@ -5,21 +5,22 @@
 // 4. Click the Web icon (</>) -> Register app
 // 5. Copy the 'firebaseConfig' object below and replace this placeholder:
 const firebaseConfig = {
-    apiKey: "PASTE_YOUR_API_KEY_HERE",
-    authDomain: "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "PASTE_YOUR_PROJECT_ID",
-    storageBucket: "PASTE_YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "PASTE_SENDER_ID",
-    appId: "PASTE_APP_ID"
+    apiKey: "AIzaSyAwblwsgX1V3pOvb94icZn40V5FDfechSQ",
+    authDomain: "final-year-tracker.firebaseapp.com",
+    projectId: "final-year-tracker",
+    storageBucket: "final-year-tracker.firebasestorage.app",
+    messagingSenderId: "825304572249",
+    appId: "1:825304572249:web:f54f9db269f9fdbe3eac48",
+    measurementId: "G-J5C7828VRQ"
 };
 
 let db = null;
 let auth = null;
 let user = null;
 
-// Initialize Firebase if config is present (user pasted it)
+// Initialize Firebase
 try {
-    if (firebaseConfig.apiKey !== "PASTE_YOUR_API_KEY_HERE") {
+    if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
         auth = firebase.auth();
