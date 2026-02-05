@@ -232,8 +232,15 @@ function renderQuestions(subject) {
         let hyEssay = 0, hySn = 0;
 
         ["ESSAY", "SHORT NOTES", "SHORT ANSWERS"].forEach(type => {
-            const list = state.questions[subject][chapter][type] || [];
-            list.sort((a, b) => b.frequency - a.frequency);
+            // Create a safe copy before sorting to avoid potential reference issues
+            const list = [...(state.questions[subject][chapter][type] || [])];
+
+            // STRICT SORT: High Frequency -> Low Frequency
+            list.sort((a, b) => {
+                const fA = parseInt(a.frequency) || 0;
+                const fB = parseInt(b.frequency) || 0;
+                return fB - fA; // Descending
+            });
 
             if (list.length > 0) hasQ = true;
 
