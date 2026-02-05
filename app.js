@@ -31,13 +31,23 @@ try {
 }
 
 // State management
+// State management
 let state = {
     userName: "Doctor",
     questions: QUESTIONS_DATA,
-    progress: JSON.parse(localStorage.getItem('mbbs_progress')) || {},
-    dailyLogs: JSON.parse(localStorage.getItem('mbbs_daily_logs')) || {},
+    progress: {}, // Start EMPTY by default to prevent leaking
+    dailyLogs: {},
     activeSubject: Object.keys(QUESTIONS_DATA)[0]
 };
+
+// Check local storage ONLY if we suspect a valid session, 
+// but relying on Auth state is safer. 
+// For now, we load it, but we might wipe it in init() if no user.
+const savedProgress = JSON.parse(localStorage.getItem('mbbs_progress'));
+if (savedProgress) state.progress = savedProgress;
+const savedLogs = JSON.parse(localStorage.getItem('mbbs_daily_logs'));
+if (savedLogs) state.dailyLogs = savedLogs;
+
 
 // Selection DOM Elements
 const subjectNav = document.getElementById('subjectNav');
@@ -80,19 +90,18 @@ function init() {
                     loadFromFirebase();
                 } else {
                     // USER LOGGED OUT
-                    if (user) {
-                        // Only runs if we were previously logged in (prevents wipe on initial load)
-                        console.log("User signed out, wiping local data...");
-                        state.progress = {};
-                        state.dailyLogs = {};
-                        localStorage.removeItem('mbbs_progress');
-                        localStorage.removeItem('mbbs_daily_logs');
-                        // Reset UI
-                        updateStats();
-                        renderQuestions(state.activeSubject);
-                        updateCharts();
-                        window.location.reload(); // Force reload to be safe
-                    }
+
+                    // Force Wipe logic
+                    console.log("Cleanup: Wiping data");
+                    state.progress = {};
+                    state.dailyLogs = {};
+                    localStorage.removeItem('mbbs_progress');
+                    localStorage.removeItem('mbbs_daily_logs');
+
+                    // Force Update UI to reflect 0% IMMEDIATELY
+                    updateStats();
+                    renderQuestions(state.activeSubject);
+                    updateCharts();
 
                     user = null;
                     loginBtn.innerText = "Login / Sync";
