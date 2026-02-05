@@ -405,21 +405,59 @@ function initCharts() {
 
     // Daily Chart logic omitted for brevity but follows same pattern...
     // Just rendering empty or simple if needed to save space
+    // --- DAILY CHART LOGIC (ROBUST) ---
     const dCtx = document.getElementById('dailyChart');
     if (dCtx) {
         const ctx = dCtx.getContext('2d');
         if (dailyChart) dailyChart.destroy();
-        // Simple mock of daily chart for now to focus on auth
-        // In real app, re-implement the date logic
-        const labels = Object.keys(state.dailyLogs).sort().slice(-7);
-        const vals = labels.map(k => state.dailyLogs[k]);
+
+        // 1. Generate Last 7 Days (Fixed X-Axis)
+        // This ensures the chart ALWAYS shows a week, even if data is empty.
+        const last7Days = [...Array(7)].map((_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (6 - i));
+            return d.toISOString().split('T')[0]; // "2024-02-05"
+        });
+
+        // 2. Map Data to these dates
+        // If no log exists for a date, default to 0.
+        const dataValues = last7Days.map(date => state.dailyLogs[date] || 0);
+
+        // 3. Format Labels (e.g., "02/05")
+        const labels = last7Days.map(d => d.split('-').slice(1).join('/'));
+
         dailyChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{ label: 'Daily', data: vals, borderColor: '#6366f1', tension: 0.3 }]
+                datasets: [{
+                    label: 'Questions Solved',
+                    data: dataValues,
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#6366f1'
+                }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, color: '#94a3b8' },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { display: false }
+                    }
+                },
+                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }
+            }
         });
     }
 }
