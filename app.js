@@ -69,8 +69,19 @@ function init() {
                     user = u;
                     loginBtn.innerText = "Logout";
                     loginBtn.style.background = "#10b981"; // Green
-                    document.getElementById('userNameDisplay').innerText = `Hi, ${u.displayName.split(' ')[0]}`;
-                    loginBtn.onclick = () => auth.signOut();
+                    document.getElementById('userNameDisplay').innerText = `Hi, ${u.displayName ? u.displayName.split(' ')[0] : 'Doc'}`;
+
+                    // Logout Handler
+                    loginBtn.onclick = () => {
+                        auth.signOut().then(() => {
+                            // WIPE DATA ON LOGOUT to prevent bleeding
+                            state.progress = {};
+                            state.dailyLogs = {};
+                            localStorage.removeItem('mbbs_progress');
+                            localStorage.removeItem('mbbs_daily_logs');
+                            window.location.reload();
+                        });
+                    };
                     loadFromFirebase();
                 } else {
                     user = null;
@@ -96,27 +107,31 @@ async function handleLogin() {
 async function loadFromFirebase() {
     if (!db || !user) return;
 
-    // Merge Strategy: Remote wins if newer, otherwise Merge. 
-    // For simplicity, we'll merge true values.
-
     try {
         const docRef = db.collection('users').doc(user.uid);
         const doc = await docRef.get();
 
         if (doc.exists) {
             const data = doc.data();
-            // Merge remote progress with local
-            state.progress = { ...state.progress, ...(data.progress || {}) };
-            state.dailyLogs = { ...state.dailyLogs, ...(data.dailyLogs || {}) };
 
-            // Save merged back to local
-            saveLocal();
+            // STRICT ISOLATION: 
+            // If cloud data exists, it OVERWRITES local data. 
+            // This prevents "Guest User" data from merging into "Account B" data.
+            if (data.progress && Object.keys(data.progress).length > 0) {
+                state.progress = data.progress || {};
+                state.dailyLogs = data.dailyLogs || {};
+                saveLocal(); // Update local storage to match cloud
+                console.log("Cloud data loaded (Local overwritten)");
+            } else {
+                // If Cloud is empty (New User), THEN we push local guest data
+                console.log("New user detected, saving local data to cloud...");
+                saveToFirebase();
+            }
 
             // Update UI
             updateStats();
             updateCharts();
             renderQuestions(state.activeSubject);
-            console.log("Data synced from cloud");
         } else {
             // First time sync: push local to cloud
             saveToFirebase();
