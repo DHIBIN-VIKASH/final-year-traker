@@ -1,3 +1,34 @@
+// --- FIREBASE CONFIGURATION ---
+// 1. Go to https://console.firebase.google.com/
+// 2. Click "Add Project" -> Name it "FinalYearTracker"
+// 3. Disable Analytics (optional) -> Create Project
+// 4. Click the Web icon (</>) -> Register app
+// 5. Copy the 'firebaseConfig' object below and replace this placeholder:
+const firebaseConfig = {
+    apiKey: "PASTE_YOUR_API_KEY_HERE",
+    authDomain: "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "PASTE_YOUR_PROJECT_ID",
+    storageBucket: "PASTE_YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "PASTE_SENDER_ID",
+    appId: "PASTE_APP_ID"
+};
+
+let db = null;
+let auth = null;
+let user = null;
+
+// Initialize Firebase if config is present (user pasted it)
+try {
+    if (firebaseConfig.apiKey !== "PASTE_YOUR_API_KEY_HERE") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        auth = firebase.auth();
+        console.log("Firebase initialized");
+    }
+} catch (e) {
+    console.log("Firebase not configured yet.");
+}
+
 // State management
 let state = {
     userName: "Doctor",
@@ -12,6 +43,7 @@ const subjectNav = document.getElementById('subjectNav');
 const explorer = document.getElementById('questionExplorer');
 const activeSubjectDisplay = document.getElementById('activeSubjectName');
 const distributionChartCtx = document.getElementById('distributionChart').getContext('2d');
+const loginBtn = document.getElementById('loginBtn');
 let distributionChart;
 let dailyChart;
 
@@ -22,19 +54,93 @@ function init() {
     renderQuestions(state.activeSubject);
     initCharts();
 
-    // Set user name (Prompt once or use default)
-    const storedName = localStorage.getItem('user_name');
-    if (storedName) {
-        state.userName = storedName;
-    } else {
-        const name = prompt("Enter your name for the Dashboard:", "Future Doctor");
-        if (name) {
-            state.userName = name;
-            localStorage.setItem('user_name', name);
+    // Setup Login Button
+    if (loginBtn) {
+        if (!auth) {
+            loginBtn.innerText = "Setup Firebase Keys";
+            loginBtn.onclick = () => alert("Please open app.js and paste your Firebase Config keys at the top!");
+        } else {
+            loginBtn.onclick = handleLogin;
+
+            // Listen for auth state
+            auth.onAuthStateChanged((u) => {
+                if (u) {
+                    user = u;
+                    loginBtn.innerText = "Logout";
+                    loginBtn.style.background = "#10b981"; // Green
+                    document.getElementById('userNameDisplay').innerText = `Hi, ${u.displayName.split(' ')[0]}`;
+                    loginBtn.onclick = () => auth.signOut();
+                    loadFromFirebase();
+                } else {
+                    user = null;
+                    loginBtn.innerText = "Login / Sync";
+                    loginBtn.style.background = "var(--primary)";
+                    loginBtn.onclick = handleLogin;
+                }
+            });
         }
     }
-    document.getElementById('userNameDisplay').innerText = `Welcome, ${state.userName}`;
-    document.getElementById('userAvatar').innerText = state.userName.charAt(0).toUpperCase();
+}
+
+async function handleLogin() {
+    if (!auth) return;
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+        await auth.signInWithPopup(provider);
+    } catch (e) {
+        alert("Login failed: " + e.message);
+    }
+}
+
+async function loadFromFirebase() {
+    if (!db || !user) return;
+
+    // Merge Strategy: Remote wins if newer, otherwise Merge. 
+    // For simplicity, we'll merge true values.
+
+    try {
+        const docRef = db.collection('users').doc(user.uid);
+        const doc = await docRef.get();
+
+        if (doc.exists) {
+            const data = doc.data();
+            // Merge remote progress with local
+            state.progress = { ...state.progress, ...(data.progress || {}) };
+            state.dailyLogs = { ...state.dailyLogs, ...(data.dailyLogs || {}) };
+
+            // Save merged back to local
+            saveLocal();
+
+            // Update UI
+            updateStats();
+            updateCharts();
+            renderQuestions(state.activeSubject);
+            console.log("Data synced from cloud");
+        } else {
+            // First time sync: push local to cloud
+            saveToFirebase();
+        }
+    } catch (e) {
+        console.error("Sync error:", e);
+    }
+}
+
+async function saveToFirebase() {
+    if (!db || !user) return;
+    try {
+        await db.collection('users').doc(user.uid).set({
+            progress: state.progress,
+            dailyLogs: state.dailyLogs,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+    } catch (e) {
+        console.error("Save error:", e);
+    }
+}
+
+function saveLocal() {
+    localStorage.setItem('mbbs_progress', JSON.stringify(state.progress));
+    localStorage.setItem('mbbs_daily_logs', JSON.stringify(state.dailyLogs));
 }
 
 function renderSubjectNav() {
@@ -128,11 +234,10 @@ function renderQuestions(subject) {
 }
 
 window.toggleQuestion = function (id, event) {
-    if (event) event.stopPropagation(); // Prevent accordion from closing
+    if (event) event.stopPropagation();
     const wasDone = state.progress[id];
     state.progress[id] = !wasDone;
 
-    // Update daily logs
     const today = new Date().toISOString().split('T')[0];
     if (!state.dailyLogs[today]) state.dailyLogs[today] = 0;
 
@@ -142,10 +247,9 @@ window.toggleQuestion = function (id, event) {
         state.dailyLogs[today] = Math.max(0, state.dailyLogs[today] - 1);
     }
 
-    localStorage.setItem('mbbs_progress', JSON.stringify(state.progress));
-    localStorage.setItem('mbbs_daily_logs', JSON.stringify(state.dailyLogs));
+    saveLocal();
+    saveToFirebase(); // Sync to cloud
 
-    // Smooth partial update instead of full re-render
     const card = document.querySelector(`[onclick*="${id}"]`);
     if (card) {
         card.classList.toggle('done');
@@ -162,13 +266,10 @@ function updateStats() {
 
     let subTotalWeight = 0;
     let subEarnedWeight = 0;
-
     let essayTotal = 0;
     let essayDone = 0;
-
     let snTotal = 0;
     let snDone = 0;
-
     let totalQuestions = 0;
     let totalDone = 0;
 
@@ -204,10 +305,12 @@ function updateStats() {
     document.getElementById('subjectProgress').innerText = `Weighted Score: ${subEarnedWeight} / ${subTotalWeight}`;
     const essayVal = document.getElementById('essayCompletion');
     essayVal.innerText = `${essayPct}%`;
-    essayVal.nextElementSibling.innerText = `(${essayDone} / ${essayTotal} Essays)`;
+    if (essayVal.nextElementSibling) essayVal.nextElementSibling.innerText = `(${essayDone} / ${essayTotal} Essays)`;
+
     const snVal = document.getElementById('snCompletion');
     snVal.innerText = `${snPct}%`;
-    snVal.nextElementSibling.innerText = `(${snDone} / ${snTotal} Short Notes)`;
+    if (snVal.nextElementSibling) snVal.nextElementSibling.innerText = `(${snDone} / ${snTotal} Short Notes)`;
+
     document.getElementById('totalQProgress').innerText = `${totalDone} / ${totalQuestions} Questions Done`;
 }
 
@@ -296,8 +399,8 @@ document.getElementById('resetProgress').onclick = () => {
     if (confirm("Clear all progress?")) {
         state.progress = {};
         state.dailyLogs = {};
-        localStorage.removeItem('mbbs_progress');
-        localStorage.removeItem('mbbs_daily_logs');
+        saveLocal();
+        saveToFirebase(); // Sync reset to cloud
         updateStats();
         renderQuestions(state.activeSubject);
         updateCharts();
