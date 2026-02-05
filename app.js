@@ -74,16 +74,26 @@ function init() {
                     // Logout Handler
                     loginBtn.onclick = () => {
                         auth.signOut().then(() => {
-                            // WIPE DATA ON LOGOUT to prevent bleeding
-                            state.progress = {};
-                            state.dailyLogs = {};
-                            localStorage.removeItem('mbbs_progress');
-                            localStorage.removeItem('mbbs_daily_logs');
-                            window.location.reload();
+                            // Logic handled in else block
                         });
                     };
                     loadFromFirebase();
                 } else {
+                    // USER LOGGED OUT
+                    if (user) {
+                        // Only runs if we were previously logged in (prevents wipe on initial load)
+                        console.log("User signed out, wiping local data...");
+                        state.progress = {};
+                        state.dailyLogs = {};
+                        localStorage.removeItem('mbbs_progress');
+                        localStorage.removeItem('mbbs_daily_logs');
+                        // Reset UI
+                        updateStats();
+                        renderQuestions(state.activeSubject);
+                        updateCharts();
+                        window.location.reload(); // Force reload to be safe
+                    }
+
                     user = null;
                     loginBtn.innerText = "Login / Sync";
                     loginBtn.style.background = "var(--primary)";
