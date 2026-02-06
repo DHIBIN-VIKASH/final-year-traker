@@ -197,10 +197,15 @@ function updateGuestUI() {
 }
 
 function renderApp() {
+    // 1. Update Header
+    if (activeSubjectDisplay) {
+        activeSubjectDisplay.innerText = state.activeSubject;
+    }
+
     renderSubjectNav();
     updateStats();
     renderQuestions(state.activeSubject);
-    initCharts();
+    updateCharts(); // Was initCharts
 }
 
 // --- RENDERING LOGIC (Shared) ---
@@ -364,7 +369,7 @@ function updateStats() {
     document.getElementById('totalQProgress').innerText = `${qDone} / ${qTotal} Questions Done`;
 }
 
-function initCharts() {
+function updateCharts() {
     // Re-use existing chart logic structure but simpler
     const subjects = Object.keys(state.questions);
     const data = subjects.map(s => {
