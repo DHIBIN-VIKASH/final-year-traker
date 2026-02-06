@@ -392,7 +392,7 @@ function updateCharts() {
                 });
             });
         });
-        return tw > 0 ? Math.round((ew / tw) * 100) : 0;
+        return tw > 0 ? parseFloat(((ew / tw) * 100).toFixed(2)) : 0;
     });
 
     if (distributionChart) distributionChart.destroy();
@@ -401,8 +401,8 @@ function updateCharts() {
     const distCanvas = document.getElementById('distributionChart');
     if (distCanvas) {
         const distributionChartCtx = distCanvas.getContext('2d');
-        // Register Plugin
-        Chart.register(ChartDataLabels);
+        // Register Plugin - REMOVED for stability
+        // Chart.register(ChartDataLabels);
 
         distributionChart = new Chart(distributionChartCtx, {
             type: 'bar',
@@ -412,32 +412,40 @@ function updateCharts() {
                     label: 'Completion %',
                     data: data,
                     backgroundColor: ['#6366f1', '#a855f7', '#22d3ee', '#10b981', '#f59e0b'],
-                    borderRadius: 8,
-                    datalabels: {
-                        color: 'white',
-                        anchor: 'end',
-                        align: 'end',
-                        offset: -5,
-                        font: { weight: 'bold' },
-                        formatter: (val) => val > 0 ? val + '%' : ''
-                    }
+                    borderRadius: 8
                 }]
             },
             options: {
                 indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    x: { max: 100, ticks: { color: '#94a3b8' } },
-                    y: { ticks: { color: '#f8fafc' } }
-                },
-                plugins: {
-                    legend: { display: false },
-                    datalabels: { display: true } // Global enable
-                },
-                layout: { padding: { right: 30 } } // Room for labels
-            }
+                scales: { x: { max: 100 } },
+                plugins: { legend: { display: false } },
+                layout: { padding: { right: 40 } }
+            },
+            plugins: [{
+                id: 'customLabels',
+                afterDatasetsDraw(chart, args, options) {
+                    const { ctx } = chart;
+                    ctx.save();
+                    chart.data.datasets.forEach((dataset, i) => {
+                        const meta = chart.getDatasetMeta(i);
+                        meta.data.forEach((bar, index) => {
+                            const value = dataset.data[index];
+                            if (value > 0) {
+                                ctx.fillStyle = '#fff';
+                                ctx.font = 'bold 11px Outfit, sans-serif';
+                                ctx.textAlign = 'left';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(value.toFixed(2) + '%', bar.x + 5, bar.y);
+                            }
+                        });
+                    });
+                    ctx.restore();
+                }
+            }]
         });
+
     }
 
     // Daily Chart logic omitted for brevity but follows same pattern...
