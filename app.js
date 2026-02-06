@@ -401,6 +401,9 @@ function updateCharts() {
     const distCanvas = document.getElementById('distributionChart');
     if (distCanvas) {
         const distributionChartCtx = distCanvas.getContext('2d');
+        // Register Plugin
+        Chart.register(ChartDataLabels);
+
         distributionChart = new Chart(distributionChartCtx, {
             type: 'bar',
             data: {
@@ -409,15 +412,30 @@ function updateCharts() {
                     label: 'Completion %',
                     data: data,
                     backgroundColor: ['#6366f1', '#a855f7', '#22d3ee', '#10b981', '#f59e0b'],
-                    borderRadius: 8
+                    borderRadius: 8,
+                    datalabels: {
+                        color: 'white',
+                        anchor: 'end',
+                        align: 'end',
+                        offset: -5,
+                        font: { weight: 'bold' },
+                        formatter: (val) => val > 0 ? val + '%' : ''
+                    }
                 }]
             },
             options: {
                 indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: { x: { max: 100 } },
-                plugins: { legend: { display: false } }
+                scales: {
+                    x: { max: 100, ticks: { color: '#94a3b8' } },
+                    y: { ticks: { color: '#f8fafc' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: { display: true } // Global enable
+                },
+                layout: { padding: { right: 30 } } // Room for labels
             }
         });
     }

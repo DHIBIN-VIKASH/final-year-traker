@@ -8,48 +8,93 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=fix4">
-    <!-- ... -->
-    <div class="stat-card">
-        <span class="stat-label">Progress Ratio</span>
-        <span class="stat-value" id="activeSubjectName" style="font-size: 1.5rem;">Subject</span>
-        <p class="stat-label" id="totalQProgress">0 / 0 Questions</p>
-    </div>
-    </section>
+    <link rel="stylesheet" href="styles.css?v=fix5">
 
-    <section class="charts-grid">
-        <div class="chart-container">
-            <h3 style="margin-bottom: 1rem;">Subject Performance</h3>
-            <canvas id="distributionChart"></canvas>
-        </div>
-        <div class="chart-container">
-            <h3 style="margin-bottom: 1rem;">Daily Progress</h3>
-            <canvas id="dailyChart"></canvas>
-        </div>
-    </section>
+    <!-- Chart.js & Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
-    <nav class="subject-nav" id="subjectNav">
-        <!-- Subjects will be injected here -->
-    </nav>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-    <main id="questionExplorer">
-        <!-- Questions will be injected here -->
-        <div style="text-align: center; padding: 5rem; color: var(--text-dim);">
-            <h2>Select a subject to begin exploring questions</h2>
-            <p>Track your 4th MBBS preparation based on repetition frequency</p>
-        </div>
-    </main>
-    </div>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
 
+<body>
     <div class="container">
-        <!-- ... header ... -->
+        <header>
+            <div class="user-profile">
+                <!-- Reverted to simple avatar -->
+                <div class="avatar" id="userAvatar">D</div>
+                <div>
+                    <h1 id="userNameDisplay">Welcome, Doctor</h1>
+                    <p class="stat-label">Final Year Tracker</p>
+                </div>
+            </div>
+            <div class="actions" style="display: flex; gap: 0.5rem;">
+                <button id="loginBtn" class="subject-btn"
+                    style="background: var(--primary); color: white; border: none;">
+                    Login / Sync
+                </button>
+                <button class="subject-btn" id="resetProgress"
+                    style="border-color: var(--danger); color: var(--danger);">Reset</button>
+            </div>
+        </header>
+
+        <section class="dashboard-stats">
+            <div class="stat-card">
+                <span class="stat-label">Subject Mastery (Weighted)</span>
+                <span class="stat-value" id="overallCompletion">0%</span>
+                <div class="q-freq" id="subjectProgress">Score: 0 / 0</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Essay Completion</span>
+                <span class="stat-value" id="essayCompletion">0%</span>
+                <p class="stat-label" style="font-size: 0.7rem;">(Weighted 5x)</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Short Note Completion</span>
+                <span class="stat-value" id="snCompletion">0%</span>
+                <p class="stat-label" style="font-size: 0.7rem;">(Normal weight)</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Progress Ratio</span>
+                <span class="stat-value" id="activeSubjectName" style="font-size: 1.5rem;">Subject</span>
+                <p class="stat-label" id="totalQProgress">0 / 0 Questions</p>
+            </div>
+        </section>
+
+        <section class="charts-grid">
+            <div class="chart-container">
+                <h3 style="margin-bottom: 1rem;">Subject Performance</h3>
+                <canvas id="distributionChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3 style="margin-bottom: 1rem;">Daily Progress</h3>
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </section>
+
+        <nav class="subject-nav" id="subjectNav">
+            <!-- Subjects will be injected here -->
+        </nav>
+
+        <main id="questionExplorer">
+            <!-- Questions will be injected here -->
+            <div style="text-align: center; padding: 5rem; color: var(--text-dim);">
+                <h2>Select a subject to begin exploring questions</h2>
+                <p>Track your 4th MBBS preparation based on repetition frequency</p>
+            </div>
+        </main>
     </div>
 
-    <script src="data.js?v=fix4"></script>
-    <script src="app.js?v=fix4"></script>
+    <script src="data.js?v=fix5"></script>
+    <script src="app.js?v=fix5"></script>
     <script>
         lucide.createIcons();
     </script>
-    </body>
+</body>
 
 </html>
