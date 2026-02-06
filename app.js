@@ -40,8 +40,8 @@ let state = {
 // --- DOM ELEMENTS ---
 const subjectNav = document.getElementById('subjectNav');
 const explorer = document.getElementById('questionExplorer');
-const activeSubjectDisplay = document.getElementById('activeSubjectName');
-const distributionChartCtx = document.getElementById('distributionChart').getContext('2d');
+// const activeSubjectDisplay = document.getElementById('activeSubjectName'); // Moved to renderApp
+// const distributionChartCtx = document.getElementById('distributionChart').getContext('2d'); // Moved to updateCharts
 const loginBtn = document.getElementById('loginBtn');
 let distributionChart;
 let dailyChart;
@@ -197,15 +197,23 @@ function updateGuestUI() {
 }
 
 function renderApp() {
-    // 1. Update Header
+    // 1. Update Header (Safe)
+    const activeSubjectDisplay = document.getElementById('activeSubjectName');
     if (activeSubjectDisplay) {
         activeSubjectDisplay.innerText = state.activeSubject;
+        console.log("Updated Subject Header:", state.activeSubject);
+    } else {
+        console.warn("activeSubjectName element not found!");
     }
 
     renderSubjectNav();
     updateStats();
     renderQuestions(state.activeSubject);
-    updateCharts(); // Was initCharts
+    try {
+        updateCharts();
+    } catch (e) {
+        console.error("Chart Error:", e);
+    }
 }
 
 // --- RENDERING LOGIC (Shared) ---
@@ -388,25 +396,31 @@ function updateCharts() {
     });
 
     if (distributionChart) distributionChart.destroy();
-    distributionChart = new Chart(distributionChartCtx, {
-        type: 'bar',
-        data: {
-            labels: subjects.map(s => s.replace('GENERAL ', '')),
-            datasets: [{
-                label: 'Completion %',
-                data: data,
-                backgroundColor: ['#6366f1', '#a855f7', '#22d3ee', '#10b981', '#f59e0b'],
-                borderRadius: 8
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { x: { max: 100 } },
-            plugins: { legend: { display: false } }
-        }
-    });
+
+    // Get context safely
+    const distCanvas = document.getElementById('distributionChart');
+    if (distCanvas) {
+        const distributionChartCtx = distCanvas.getContext('2d');
+        distributionChart = new Chart(distributionChartCtx, {
+            type: 'bar',
+            data: {
+                labels: subjects.map(s => s.replace('GENERAL ', '')),
+                datasets: [{
+                    label: 'Completion %',
+                    data: data,
+                    backgroundColor: ['#6366f1', '#a855f7', '#22d3ee', '#10b981', '#f59e0b'],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { x: { max: 100 } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
 
     // Daily Chart logic omitted for brevity but follows same pattern...
     // Just rendering empty or simple if needed to save space
