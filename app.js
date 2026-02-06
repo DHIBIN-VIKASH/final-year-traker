@@ -420,30 +420,8 @@ function updateCharts() {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: { x: { max: 100 } },
-                plugins: { legend: { display: false } },
-                layout: { padding: { right: 40 } }
-            },
-            plugins: [{
-                id: 'customLabels',
-                afterDatasetsDraw(chart, args, options) {
-                    const { ctx } = chart;
-                    ctx.save();
-                    chart.data.datasets.forEach((dataset, i) => {
-                        const meta = chart.getDatasetMeta(i);
-                        meta.data.forEach((bar, index) => {
-                            const value = dataset.data[index];
-                            if (value > 0) {
-                                ctx.fillStyle = '#facc15'; // Yellow for visibility test
-                                ctx.font = 'bold 11px Outfit, sans-serif';
-                                ctx.textAlign = 'left';
-                                ctx.textBaseline = 'middle';
-                                ctx.fillText(value.toFixed(2) + '%', bar.x + 5, bar.y);
-                            }
-                        });
-                    });
-                    ctx.restore();
-                }
-            }]
+                plugins: { legend: { display: false } }
+            }
         });
 
     }
