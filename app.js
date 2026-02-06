@@ -433,7 +433,7 @@ function updateCharts() {
                         meta.data.forEach((bar, index) => {
                             const value = dataset.data[index];
                             if (value > 0) {
-                                ctx.fillStyle = '#fff';
+                                ctx.fillStyle = '#facc15'; // Yellow for visibility test
                                 ctx.font = 'bold 11px Outfit, sans-serif';
                                 ctx.textAlign = 'left';
                                 ctx.textBaseline = 'middle';
